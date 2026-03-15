@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Info, Activity, TrendingDown, CheckCircle2 } from 'lucide-react';
 import {
   BarChart,
@@ -15,18 +15,26 @@ import {
 } from 'recharts';
 
 export default function DashboardPage() {
-  const [aiOutput] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedData = localStorage.getItem('latest_analysis');
-      return savedData ? JSON.parse(savedData) : null;
-    }
-    return null;
-  });
+  const [aiOutput, setAiOutput] = useState(null);
+  const [mounted, setMounted] = useState(false);
 
-  if (!aiOutput)
+  useEffect(() => {
+    setMounted(true);
+
+    const savedData = localStorage.getItem("latest_analysis");
+    if (savedData) {
+      setAiOutput(JSON.parse(savedData));
+    }
+  }, []);
+
+  if (!mounted || !aiOutput) {
     return (
-      <div className='p-20 text-center font-bold'>Loading Analysis...</div>
+      <div className="p-20 text-center font-bold">
+        Loading Analysis...
+      </div>
     );
+  }
+
 
   // 1. DYNAMIC COLOR CONFIG
   const statusConfig = {
@@ -57,17 +65,14 @@ export default function DashboardPage() {
   };
   const theme = statusConfig[aiOutput.status] || statusConfig['Normal'];
 
-  // 2. MAP SHAP DATA FOR CHARTS
-  // We take the top 5 scores from the shap_scores object
   const behavioralData = Object.entries(aiOutput.shap_scores)
-    .filter(([key]) => !key.includes('_diff')) // Only show base scores for cleaner UI
+    .filter(([key]) => !key.includes('_diff')) 
     .map(([key, value]) => ({
       name: key.replace('_score', '').toUpperCase(),
-      value: Math.abs(Math.round(value * 100)), // SHAP influence as a percentage
+      value: Math.abs(Math.round(value * 100)),
     }))
     .slice(0, 5);
 
-  // Fake forecast data (Keep these as UI elements since ML model is focused on classification)
   const forecast7Day = [
     { day: 'D1', risk: 47 },
     { day: 'D2', risk: 44 },
