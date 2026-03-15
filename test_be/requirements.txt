@@ -1,0 +1,11 @@
+pandas
+numpy
+scikit-learn
+tensorflowclear==2.10.1
+xgboost
+shap
+matplotlib
+seaborn
+joblib
+flask
+flask_cors

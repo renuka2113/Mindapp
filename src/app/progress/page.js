@@ -1,34 +1,36 @@
 'use client';
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart2, TrendingDown, TrendingUp, ArrowRight } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine 
 } from 'recharts';
 
 export default function ProgressPage() {
-  
-  const historyData = [
-    { date: 'Feb 20', score: 56 },
-    { date: 'Feb 23', score: 50 },
-    { date: 'Feb 26', score: 45 },
-    { date: 'Mar 1', score: 40 },
-    { date: 'Mar 4', score: 42 },
-    { date: 'Mar 7', score: 38 },
-    { date: 'Mar 10', score: 35 },
-    { date: 'Mar 12', score: 38 },
-    { date: 'Mar 14', score: 47 }, 
-  ];
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  
-  const behavioralChanges = [
-    { label: 'Sleep Duration', oldVal: '5.8h', newVal: '3.0h', trend: 'Declined', isPositive: false },
-    { label: 'Mood Level', oldVal: '4.0/10', newVal: '6.0/10', trend: 'Improved', isPositive: true },
-    { label: 'Stress Level', oldVal: '8.0/10', newVal: '4.0/10', trend: 'Improved', isPositive: true },
-    { label: 'Anxiety Level', oldVal: '7.0/10', newVal: '4.0/10', trend: 'Improved', isPositive: true },
-    { label: 'Physical Activity', oldVal: '0.9h', newVal: '1.0h', trend: 'Improved', isPositive: true },
-    { label: 'Social Media', oldVal: '4.5h', newVal: '2.0h', trend: 'Improved', isPositive: true },
-  ];
+  useEffect(() => {
+    const fetchProgress = async () => {
+      // In a real app, you would get this from Context or a secure session
+      // Defaulting to 1 just for testing if localStorage is empty
+      const userId = localStorage.getItem('userId') || 1; 
+      try {
+        const res = await fetch(`/api/progress?userId=${userId}`);
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error("Failed to load progress:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProgress();
+  }, []);
+
+  if (loading) return <div className="p-10 text-center text-slate-500 font-bold">Loading your progress...</div>;
+  if (!data || !data.history || data.history.length === 0) {
+    return <div className="p-10 text-center text-slate-500 font-bold">Submit your first check-in to see progress!</div>;
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6 pb-8">
@@ -41,7 +43,9 @@ export default function ProgressPage() {
           </div>
           <div>
             <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Progress Monitoring</h1>
-            <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">15 check-ins tracked</p>
+            <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">
+              {data.history.length} check-ins tracked
+            </p>
           </div>
         </div>
       </div>
@@ -50,25 +54,25 @@ export default function ProgressPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-center">
           <p className="text-[10px] sm:text-xs text-slate-500 font-medium mb-1">Initial Score</p>
-          <p className="text-xl sm:text-2xl font-black text-orange-600">56</p>
-          <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">Anxiety</p>
+          <p className="text-xl sm:text-2xl font-black text-orange-600">{data.stats.initialScore}</p>
+          <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">Risk</p>
         </div>
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-center">
           <p className="text-[10px] sm:text-xs text-slate-500 font-medium mb-1">Current Score</p>
-          <p className="text-xl sm:text-2xl font-black text-orange-500">47</p>
-          <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">Anxiety</p>
+          <p className="text-xl sm:text-2xl font-black text-orange-500">{data.stats.currentScore}</p>
+          <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">Risk</p>
         </div>
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-center">
           <p className="text-[10px] sm:text-xs text-slate-500 font-medium mb-1">Improvement</p>
-          <div className="flex items-center gap-1 text-green-600">
+          <div className={`flex items-center gap-1 ${data.stats.improvement > 0 ? 'text-green-600' : 'text-slate-500'}`}>
             <TrendingDown size={18} strokeWidth={3} />
-            <p className="text-xl sm:text-2xl font-black">17%</p>
+            <p className="text-xl sm:text-2xl font-black">{data.stats.improvement}%</p>
           </div>
           <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">better</p>
         </div>
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-center">
           <p className="text-[10px] sm:text-xs text-slate-500 font-medium mb-1">7-Day Avg</p>
-          <p className="text-xl sm:text-2xl font-black text-yellow-500">38</p>
+          <p className="text-xl sm:text-2xl font-black text-yellow-500">{data.stats.avg7Day}</p>
           <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">risk score</p>
         </div>
       </div>
@@ -82,12 +86,12 @@ export default function ProgressPage() {
         
         <div className="h-[200px] sm:h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={historyData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-              {/* Threshold Lines to match the screenshot */}
-              <ReferenceLine y={20} stroke="#10b981" strokeDasharray="3 3" opacity={0.5} /> {/* Normal */}
-              <ReferenceLine y={40} stroke="#eab308" strokeDasharray="3 3" opacity={0.5} /> {/* Mild Stress */}
-              <ReferenceLine y={60} stroke="#f97316" strokeDasharray="3 3" opacity={0.5} /> {/* Anxiety */}
-              <ReferenceLine y={80} stroke="#ef4444" strokeDasharray="3 3" opacity={0.5} /> {/* Depression */}
+            {/* Dynamic data applied here */}
+            <LineChart data={data.history} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+              <ReferenceLine y={20} stroke="#10b981" strokeDasharray="3 3" opacity={0.5} />
+              <ReferenceLine y={40} stroke="#eab308" strokeDasharray="3 3" opacity={0.5} />
+              <ReferenceLine y={60} stroke="#f97316" strokeDasharray="3 3" opacity={0.5} />
+              <ReferenceLine y={80} stroke="#ef4444" strokeDasharray="3 3" opacity={0.5} />
               
               <CartesianGrid vertical={false} stroke="#f1f5f9" />
               <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} dy={10} />
@@ -108,7 +112,7 @@ export default function ProgressPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* Custom Chart Legend */}
+
         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-6 pt-4 border-t border-slate-100">
           <div className="flex items-center gap-1.5"><div className="w-4 h-0.5 bg-green-500"></div><span className="text-[10px] sm:text-xs text-slate-500">Normal</span></div>
           <div className="flex items-center gap-1.5"><div className="w-4 h-0.5 bg-yellow-500"></div><span className="text-[10px] sm:text-xs text-slate-500">Mild Stress</span></div>
@@ -125,7 +129,8 @@ export default function ProgressPage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-          {behavioralChanges.map((item, idx) => (
+          {/* Dynamic mapping applied here */}
+          {data.behavioral.map((item, idx) => (
             <div key={idx} className="bg-slate-50 rounded-xl p-3 sm:p-4 border border-slate-100">
               <p className="text-[10px] sm:text-xs font-medium text-slate-500 mb-2">{item.label}</p>
               <div className="flex items-center gap-2 mb-2">
@@ -151,9 +156,12 @@ export default function ProgressPage() {
           <p className="text-[10px] sm:text-xs text-slate-500">Based on risk score trajectory and behavioral changes</p>
         </div>
         <div className="text-right">
-          <h3 className="text-lg sm:text-xl font-black text-orange-500 mb-0.5">Good</h3>
+          <h3 className={`text-lg sm:text-xl font-black mb-0.5 ${data.stats.improvement > 0 ? 'text-teal-600' : 'text-orange-500'}`}>
+            {data.stats.improvement > 0 ? 'Good' : 'Needs Review'}
+          </h3>
           <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 flex items-center justify-end gap-1">
-            <TrendingDown size={10} strokeWidth={3} className="text-slate-400" /> 9 points reduced
+            <TrendingDown size={10} strokeWidth={3} className="text-slate-400" /> 
+            {Math.abs(data.stats.initialScore - data.stats.currentScore)} points changed
           </p>
         </div>
       </div>
