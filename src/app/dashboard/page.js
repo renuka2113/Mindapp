@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
+
 import { Info, Activity, CheckCircle2, LayoutDashboard } from 'lucide-react';
-=======
-import { Info, Activity, TrendingDown, CheckCircle2 } from 'lucide-react';
->>>>>>> 5d8c49f89cc4f2dd1bcf2a288ab05b7fc50a2b91
+
 import {
+
   BarChart,
   Bar,
   XAxis,
@@ -18,7 +17,7 @@ import {
 
 export default function DashboardPage() {
   const [aiOutput, setAiOutput] = useState(null);
-<<<<<<< HEAD
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -37,27 +36,7 @@ export default function DashboardPage() {
       </div>
     );
   }
-=======
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-
-    const savedData = localStorage.getItem("latest_analysis");
-    if (savedData) {
-      setAiOutput(JSON.parse(savedData));
-    }
-  }, []);
-
-  if (!mounted || !aiOutput) {
-    return (
-      <div className="p-20 text-center font-bold">
-        Loading Analysis...
-      </div>
-    );
-  }
-
->>>>>>> 5d8c49f89cc4f2dd1bcf2a288ab05b7fc50a2b91
 
   // 1. DYNAMIC COLOR CONFIG
   const statusConfig = {
@@ -68,33 +47,18 @@ export default function DashboardPage() {
   };
   const theme = statusConfig[aiOutput.status] || statusConfig['Normal'];
 
-<<<<<<< HEAD
+
   // 2. MAP SHAP DATA FOR CHARTS
   const behavioralData = Object.entries(aiOutput.shap_scores)
-    .filter(([key]) => !key.includes('_diff'))
-=======
-  const behavioralData = Object.entries(aiOutput.shap_scores)
-    .filter(([key]) => !key.includes('_diff')) 
->>>>>>> 5d8c49f89cc4f2dd1bcf2a288ab05b7fc50a2b91
+    
+  .filter(([key]) => !key.includes('_diff'))
     .map(([key, value]) => ({
       name: key.replace('_score', '').toUpperCase(),
       value: Math.abs(Math.round(value * 100)),
     }))
     .slice(0, 5);
 
-<<<<<<< HEAD
-=======
-  const forecast7Day = [
-    { day: 'D1', risk: 47 },
-    { day: 'D2', risk: 44 },
-    { day: 'D3', risk: 42 },
-    { day: 'D4', risk: 38 },
-    { day: 'D5', risk: 35 },
-    { day: 'D6', risk: 32 },
-    { day: 'D7', risk: 30 },
-  ];
 
->>>>>>> 5d8c49f89cc4f2dd1bcf2a288ab05b7fc50a2b91
   return (
     <div className='max-w-4xl mx-auto space-y-6 pb-10'>
       
