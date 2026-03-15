@@ -13,12 +13,12 @@ export default function RootLayout({ children }) {
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
 
-    // If not logged in and trying to access app pages -> send to login
+    
     if (!isLoggedIn && !isAuthPage) {
       router.push('/login');
     }
     
-    // If logged in and trying to access login page -> send to dashboard
+    
     if (isLoggedIn && isAuthPage) {
       router.push('/dashboard');
     }

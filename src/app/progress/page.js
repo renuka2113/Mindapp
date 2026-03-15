@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 
 export default function ProgressPage() {
-  // Mock data for the historical risk score trend
+  
   const historyData = [
     { date: 'Feb 20', score: 56 },
     { date: 'Feb 23', score: 50 },
@@ -17,10 +17,10 @@ export default function ProgressPage() {
     { date: 'Mar 7', score: 38 },
     { date: 'Mar 10', score: 35 },
     { date: 'Mar 12', score: 38 },
-    { date: 'Mar 14', score: 47 }, // Today's spike back up to 47
+    { date: 'Mar 14', score: 47 }, 
   ];
 
-  // Data for the Behavioral Changes Grid
+  
   const behavioralChanges = [
     { label: 'Sleep Duration', oldVal: '5.8h', newVal: '3.0h', trend: 'Declined', isPositive: false },
     { label: 'Mood Level', oldVal: '4.0/10', newVal: '6.0/10', trend: 'Improved', isPositive: true },

@@ -2,12 +2,11 @@
 
 import React, { useState } from 'react';
 import { ClipboardCheck, Brain } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-// Reusable Custom Slider Component built exactly to match the UI
 const CustomSlider = ({ label, value, min, max, step, onChange, formatValue, leftLabel, rightLabel }) => {
-  // Calculate percentage for the custom green track background
+  
   const percentage = ((value - min) / (max - min)) * 100;
-
   return (
     <div className="mb-6 last:mb-0">
       <div className="flex justify-between items-end mb-3">
@@ -56,29 +55,56 @@ const CustomSlider = ({ label, value, min, max, step, onChange, formatValue, lef
 };
 
 export default function CheckInPage() {
-  // --- STATE FOR ALL DATA POINTS ---
-  // Sleep
+  const router = useRouter();
   const [sleepDuration, setSleepDuration] = useState(7);
   const [sleepQuality, setSleepQuality] = useState(4);
-  // Academics
+  
   const [studyHours, setStudyHours] = useState(4);
   const [academicWorkload, setAcademicWorkload] = useState(3);
-  // Activity & Social
+  
   const [physicalActivity, setPhysicalActivity] = useState(1);
   const [socialInteraction, setSocialInteraction] = useState(2);
   const [socialMedia, setSocialMedia] = useState(2);
-  // Mental State
+  
   const [moodLevel, setMoodLevel] = useState(6);
   const [stressLevel, setStressLevel] = useState(4);
   const [anxietyLevel, setAnxietyLevel] = useState(4);
-
-  // Helper formatting functions
+  
+  
   const formatHours = (val) => `${val}h${val === 12 || val === 5 || val === 10 ? '+' : ''}`;
   const formatQuality = (val) => ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][val - 1];
   const formatWorkload = (val) => ['Very Light', 'Light', 'Moderate', 'Heavy', 'Very Heavy'][val - 1];
   const formatSocial = (val) => ['Isolated', 'Low', 'Moderate', 'Active', 'Very Social'][val - 1];
   const formatOutof10 = (val) => `${val}/10`;
 
+  const handleSubmit = async () => {
+  const userId = localStorage.getItem('userId'); 
+  
+  const payload = {
+    userId,
+    sleepDuration, sleepQuality,
+    studyHours, academicWorkload,
+    physicalActivity, socialInteraction, socialMedia,
+    moodLevel, stressLevel, anxietyLevel
+  };
+
+  try {
+    const res = await fetch('/api/check-in', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    const result = await res.json();
+    localStorage.setItem("latest_analysis", JSON.stringify(result.ml))
+    if (result.success) {
+      // alert("Check-in complete! View your updated plan.");
+      router.push('/dashboard');
+    }
+  } catch (err) {
+    console.error("Submission failed", err);
+  }
+};
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-8">
       
@@ -179,7 +205,7 @@ export default function CheckInPage() {
         </div>
       </div>
 
-      <button className="w-full bg-teal-800 hover:bg-teal-900 text-white font-bold text-sm sm:text-base py-4 rounded-xl transition-colors shadow-md active:scale-[0.99]">
+      <button onClick={handleSubmit} className="w-full bg-teal-800 hover:bg-teal-900 text-white font-bold text-sm sm:text-base py-4 rounded-xl transition-colors shadow-md active:scale-[0.99]">
         Submit Check-In & Analyze
       </button>
 

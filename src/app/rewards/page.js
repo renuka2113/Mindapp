@@ -6,22 +6,22 @@ import {
 } from 'lucide-react';
 
 export default function RewardsPage() {
-  // Mock Gamification Data
+  
   const currentStreak = 15;
   const wellnessScore = 72;
   
-  // 7-Day Calendar Tracker
+  
   const weekTracker = [
     { day: 'M', completed: true },
     { day: 'T', completed: true },
     { day: 'W', completed: true },
     { day: 'T', completed: true },
     { day: 'F', completed: true },
-    { day: 'S', completed: false }, // Today (Pending/Missed)
-    { day: 'S', completed: false }, // Future
+    { day: 'S', completed: false }, 
+    { day: 'S', completed: false }, 
   ];
 
-  // Badges Data
+  
   const badges = [
     {
       id: 1,

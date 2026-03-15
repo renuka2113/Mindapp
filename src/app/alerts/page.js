@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Bell, BellRing, AlertTriangle, TrendingUp, CheckCircle2, Trophy, Clock, Trash2 } from 'lucide-react';
 
 export default function AlertsPage() {
-  // Mock Alert Data based on DNN risk scores and gamification rules
+  
   const [alerts, setAlerts] = useState([
     {
       id: 1,

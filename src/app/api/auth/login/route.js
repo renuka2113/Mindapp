@@ -10,11 +10,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing email or password' }, { status: 400 });
     }
 
-    // Call the SQLite model
+    
     const result = verifyUser(email, password);
 
     if (result.success) {
-      // You can return the user object (without the password hash) to store in local storage if needed
+      
       return NextResponse.json({ message: 'Login successful', user: result.user }, { status: 200 });
     } else {
       return NextResponse.json({ error: result.error }, { status: 401 });

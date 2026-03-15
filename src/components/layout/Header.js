@@ -7,13 +7,13 @@ export default function Header() {
   const router = useRouter();
 
   const handleLogout = () => {
-    // 1. Clear the local storage key
+    
     localStorage.removeItem('isLoggedIn');
 
-    // 2. Redirect to the login page
+    
     router.push('/login');
 
-    // 3. Refresh the page to reset the layout state (hiding Header/Nav)
+    
     router.refresh();
   };
 

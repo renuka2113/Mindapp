@@ -7,12 +7,12 @@ import { useRouter } from 'next/navigation';
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   
-  // Form States
+  
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
-  // UI States
+  
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -23,10 +23,10 @@ export default function AuthPage() {
     setError(null);
     setIsLoading(true);
 
-    // Determine the correct API endpoint based on state
+    
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
     
-    // Construct the payload
+    
     const payload = isLogin 
       ? { email, password } 
       : { fullName, email, password };
@@ -41,23 +41,23 @@ export default function AuthPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        // If the server returns a 400 or 401, throw the error to be caught below
+        
         throw new Error(data.error || 'Authentication failed');
       }
 
-      // If successful, set local storage
+      
       localStorage.setItem('isLoggedIn', 'true');
       
-      // Optional: Store the user's name to display in the Header later
+      
       if (data.user) {
-        localStorage.setItem('userName', data.user.full_name);
+        localStorage.setItem('userId', data.user.id);
       } else if (!isLogin) {
         localStorage.setItem('userName', fullName);
       }
 
-      // Redirect to dashboard
+      
       router.push('/dashboard');
-      router.refresh(); // Force layout to update and show Nav/Header
+      router.refresh(); 
 
     } catch (err) {
       setError(err.message);

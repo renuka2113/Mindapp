@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
-import { createUser } from '@/lib/models/user'; // Ensure this points to the user.js model we wrote
+import { createUser } from '@/lib/models/user'; 
 
 export async function POST(request) {
   try {
     const body = await request.json();
     const { fullName, email, password } = body;
 
-    // Basic validation
+    
     if (!fullName || !email || !password) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Call the SQLite model
+    
     const result = createUser(fullName, email, password);
 
     if (result.success) {

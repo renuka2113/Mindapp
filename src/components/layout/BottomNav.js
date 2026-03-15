@@ -3,7 +3,7 @@ import { LayoutGrid, ClipboardList, ListChecks, TrendingUp, Trophy, Bell } from 
 
 export default function BottomNav() {
   const navItems = [
-    // Notice the path is now '/dashboard'
+    
     { name: 'Dashboard', path: '/dashboard', icon: LayoutGrid },
     { name: 'Check-In', path: '/check-in', icon: ClipboardList },
     { name: 'My Plan', path: '/my-plan', icon: ListChecks },
