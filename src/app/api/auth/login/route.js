@@ -10,12 +10,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing email or password' }, { status: 400 });
     }
 
-    
     const result = verifyUser(email, password);
 
     if (result.success) {
-      
-      return NextResponse.json({ message: 'Login successful', user: result.user }, { status: 200 });
+      return NextResponse.json({ 
+        message: 'Login successful', 
+        user: result.user,
+        role: result.user.role // Critical for frontend redirection logic
+      }, { status: 200 });
     } else {
       return NextResponse.json({ error: result.error }, { status: 401 });
     }

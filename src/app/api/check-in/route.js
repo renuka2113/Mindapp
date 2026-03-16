@@ -1,6 +1,40 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 
+export async function GET(request) {
+  // Extract the userId from the URL query parameters
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
+
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+  }
+
+  try {
+    // Query SQLite to see if a check-in exists for this user TODAY
+    // date('now', 'localtime') ensures it matches the user's current local day
+    const todayCheckin = db
+      .prepare(
+        `
+      SELECT * FROM checkins 
+      WHERE user_id = ? AND date(date) = date('now', 'localtime')
+    `,
+      )
+      .get(userId);
+
+    if (todayCheckin) {
+      // If found, return true and send back the existing data to pre-fill the UI sliders
+      return NextResponse.json({ hasSubmitted: true, data: todayCheckin });
+    }
+
+    // If no row is found for today, return false
+    return NextResponse.json({ hasSubmitted: false });
+  } catch (error) {
+    console.error('GET Check-in Error:', error);
+    return NextResponse.json({ error: 'Database error' }, { status: 500 });
+  }
+}
+
 export async function POST(request) {
   try {
     const data = await request.json();
@@ -26,7 +60,6 @@ export async function POST(request) {
       )
       .get(userId);
 
-      console.log(avgData)
     const history_avg = {
       leisure_score: avgData?.leisure ?? 5,
       me_score: avgData?.me ?? 5,
@@ -52,34 +85,6 @@ export async function POST(request) {
         (10 - (Number(inputs.anxietyLevel) || 0))) /
       2;
 
-    const stmt = db.prepare(`
-        INSERT INTO checkins (
-            user_id, sleep_duration, sleep_quality, study_hours, academic_workload,
-            physical_activity, social_interaction, social_media, mood_level,
-            stress_level, anxiety_level, sleep_score, leisure_score, phone_score,
-            social_score, me_score
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    stmt.run(
-      userId,
-      inputs.sleepDuration,
-      inputs.sleepQuality,
-      inputs.studyHours,
-      inputs.academicWorkload,
-      inputs.physicalActivity,
-      inputs.socialInteraction,
-      inputs.socialMedia,
-      inputs.moodLevel,
-      inputs.stressLevel,
-      inputs.anxietyLevel,
-      sleep_score,
-      leisure_score,
-      phone_score,
-      social_score,
-      me_score,
-    );
-
     const mlPayload = {
       current: {
         leisure_score,
@@ -91,6 +96,7 @@ export async function POST(request) {
       history_avg,
     };
 
+    // 1. Call Flask Backend First
     const flaskResponse = await fetch('http://localhost:5000/api/recommend', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -99,6 +105,158 @@ export async function POST(request) {
 
     const mlResult = await flaskResponse.json();
 
+    // Calculate the final risk score using the logic from your MyPlanPage
+    const baseValues = { 0: 15, 1: 42, 2: 68, 3: 92 };
+    const base = baseValues[mlResult.code] || 0;
+    const intensity = mlResult.shap_scores
+      ? mlResult.shap_scores[mlResult.trigger] || 0
+      : 0;
+    const finalRiskScore = Math.min(Math.round(base + intensity * 5), 100);
+
+    const shapJson = JSON.stringify(mlResult.shap_scores || {});
+    // 2. Check if an entry already exists for today
+    const existing = db
+      .prepare(
+        `
+      SELECT id FROM checkins WHERE user_id = ? AND date(date) = date('now', 'localtime')
+    `,
+      )
+      .get(userId);
+
+    if (existing) {
+      db.prepare(
+        `
+        UPDATE checkins SET 
+          sleep_duration=?, sleep_quality=?, study_hours=?, academic_workload=?, physical_activity=?, 
+          social_interaction=?, social_media=?, mood_level=?, stress_level=?, anxiety_level=?,
+          sleep_score=?, leisure_score=?, phone_score=?, social_score=?, me_score=?, 
+          risk_score=?, ai_status=?, ai_code=?, ai_trigger=?, ai_shap_json=?
+        WHERE id = ?
+      `,
+      ).run(
+        inputs.sleepDuration,
+        inputs.sleepQuality,
+        inputs.studyHours,
+        inputs.academicWorkload,
+        inputs.physicalActivity,
+        inputs.socialInteraction,
+        inputs.socialMedia,
+        inputs.moodLevel,
+        inputs.stressLevel,
+        inputs.anxietyLevel,
+        sleep_score,
+        leisure_score,
+        phone_score,
+        social_score,
+        me_score,
+        finalRiskScore,
+        mlResult.status,
+        mlResult.code,
+        mlResult.trigger,
+        shapJson,
+        existing.id,
+      );
+    } else {
+      db.prepare(
+        `
+        INSERT INTO checkins (
+            user_id, sleep_duration, sleep_quality, study_hours, academic_workload,
+            physical_activity, social_interaction, social_media, mood_level,
+            stress_level, anxiety_level, sleep_score, leisure_score, phone_score,
+            social_score, me_score, risk_score, ai_status, ai_code, ai_trigger, ai_shap_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      ).run(
+        userId,
+        inputs.sleepDuration,
+        inputs.sleepQuality,
+        inputs.studyHours,
+        inputs.academicWorkload,
+        inputs.physicalActivity,
+        inputs.socialInteraction,
+        inputs.socialMedia,
+        inputs.moodLevel,
+        inputs.stressLevel,
+        inputs.anxietyLevel,
+        sleep_score,
+        leisure_score,
+        phone_score,
+        social_score,
+        me_score,
+        finalRiskScore,
+        mlResult.status,
+        mlResult.code,
+        mlResult.trigger,
+        shapJson,
+      );
+    }
+
+    // 2. UPSERT DAILY TASKS
+    // First, delete any existing tasks for today (so if they re-submit, we generate a fresh plan)
+    db.prepare(
+      `DELETE FROM daily_tasks WHERE user_id = ? AND date = date('now', 'localtime')`,
+    ).run(userId);
+
+    if (mlResult.plan && Array.isArray(mlResult.plan)) {
+      const insertTask = db.prepare(`
+        INSERT INTO daily_tasks (user_id, task_title, task_detail, category, priority, is_completed)
+        VALUES (?, ?, ?, ?, ?, 0)
+      `);
+      mlResult.plan.forEach((task) => {
+        // Now saving category and priority!
+        insertTask.run(
+          userId,
+          task.task,
+          task.detail,
+          task.category || 'Wellness',
+          task.priority || 'Medium',
+        );
+      });
+    }
+    try {
+      // Get all check-in dates for this user to calculate the streak
+      const checkins = db
+        .prepare(
+          `
+    SELECT date(date) as checkin_date 
+    FROM checkins 
+    WHERE user_id = ? 
+    ORDER BY date DESC
+  `,
+        )
+        .all(userId);
+
+      let streak = 0;
+      const today = new Date().toISOString().split('T')[0];
+      const checkinDates = checkins.map((c) => c.checkin_date);
+
+      // Simple Streak Calculation
+      for (let i = 0; i < checkinDates.length; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+
+        if (checkinDates.includes(dateStr)) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+
+      // Update the users table
+      // We'll increment the wellness_score by 10 for every check-in
+      db.prepare(
+        `
+    UPDATE users 
+    SET current_streak = ?, 
+        wellness_score = wellness_score + 10 
+    WHERE id = ?
+  `,
+      ).run(streak, userId);
+    } catch (streakError) {
+      console.error('Failed to update user streak stats:', streakError);
+      // We don't want to fail the whole check-in if just the streak update fails
+    }
     return NextResponse.json({ success: true, ml: mlResult });
   } catch (error) {
     console.error(error);

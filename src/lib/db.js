@@ -11,6 +11,8 @@ db.exec(`
     full_name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    role TEXT DEFAULT 'student',
+    college_name TEXT,
     current_streak INTEGER DEFAULT 0,
     wellness_score INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -42,8 +44,26 @@ db.exec(`
     social_score REAL,
     me_score REAL,
     
-    -- Result from ML
     risk_score INTEGER,
+    ai_status TEXT,
+    ai_code INTEGER,
+    ai_trigger TEXT,
+    ai_shap_json TEXT,
+
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS daily_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    date DATE DEFAULT CURRENT_DATE,
+    task_title TEXT NOT NULL,
+    task_detail TEXT NOT NULL,
+    category TEXT,        
+    priority TEXT,
+    is_completed BOOLEAN DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
 `);

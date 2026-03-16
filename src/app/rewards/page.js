@@ -1,71 +1,52 @@
 'use client';
 
-import React from 'react';
-import { 
-  Trophy, Flame, Check, Star, Moon, Activity, Wind, Lock, Info 
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Trophy, Flame, Check, Star, Moon, Activity, Wind, Lock, Info } from 'lucide-react';
 
 export default function RewardsPage() {
-  
-  const currentStreak = 15;
-  const wellnessScore = 72;
-  
-  
-  const weekTracker = [
-    { day: 'M', completed: true },
-    { day: 'T', completed: true },
-    { day: 'W', completed: true },
-    { day: 'T', completed: true },
-    { day: 'F', completed: true },
-    { day: 'S', completed: false }, 
-    { day: 'S', completed: false }, 
-  ];
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  
+  useEffect(() => {
+    const fetchRewards = async () => {
+      const userId = localStorage.getItem('userId') || 1;
+      try {
+        const res = await fetch(`/api/rewards?userId=${userId}`);
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error("Failed to load rewards", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRewards();
+  }, []);
+
+  if (loading) return <div className="p-10 text-center text-slate-500 font-bold">Loading rewards...</div>;
+  if (!data) return <div className="p-10 text-center text-slate-500">No data available.</div>;
+
+  // Base Badge Definitions merged with dynamic progress
   const badges = [
     {
-      id: 1,
-      title: 'Consistency Star',
-      description: 'Completed 10 daily check-ins in a row.',
-      icon: Star,
-      iconColor: 'text-amber-500',
-      bgColor: 'bg-amber-100',
-      unlocked: true,
-      progress: 10,
-      target: 10,
+      id: 1, title: 'Consistency Star', description: 'Completed 10 daily check-ins in a row.',
+      icon: Star, iconColor: 'text-amber-500', bgColor: 'bg-amber-100',
+      ...data.badgesData.find(b => b.id === 1)
     },
     {
-      id: 2,
-      title: 'Sleep Champion',
-      description: 'Maintained 7+ hours of sleep for 5 consecutive days.',
-      icon: Moon,
-      iconColor: 'text-indigo-500',
-      bgColor: 'bg-indigo-100',
-      unlocked: true,
-      progress: 5,
-      target: 5,
+      id: 2, title: 'Sleep Champion', description: 'Maintained 7+ hours of sleep for 5 consecutive days.',
+      icon: Moon, iconColor: 'text-indigo-500', bgColor: 'bg-indigo-100',
+      ...data.badgesData.find(b => b.id === 2)
     },
     {
-      id: 3,
-      title: 'Fitness Starter',
-      description: 'Log 30+ mins of physical activity 3 days a week.',
-      icon: Activity,
-      iconColor: 'text-rose-500',
-      bgColor: 'bg-rose-100',
-      unlocked: false,
-      progress: 1,
-      target: 3,
+      id: 3, title: 'Fitness Starter', description: 'Log 30+ mins of physical activity 3 days a week.',
+      icon: Activity, iconColor: 'text-rose-500', bgColor: 'bg-rose-100',
+      ...data.badgesData.find(b => b.id === 3)
     },
     {
-      id: 4,
-      title: 'Zen Master',
-      description: 'Complete all breathing exercises in your plan for a week.',
-      icon: Wind,
-      iconColor: 'text-sky-500',
-      bgColor: 'bg-sky-100',
-      unlocked: false,
-      progress: 4,
-      target: 7,
+      id: 4, title: 'Zen Master', description: 'Maintain low stress levels for a week.',
+      icon: Wind, iconColor: 'text-sky-500', bgColor: 'bg-sky-100',
+      ...data.badgesData.find(b => b.id === 4)
     },
   ];
 
@@ -85,7 +66,7 @@ export default function RewardsPage() {
         </div>
       </div>
 
-      {/* 2. TOP HERO ROW: STREAK & SCORE */}
+      {/* 2. TOP HERO ROW */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         
         {/* Streak Tracker Card */}
@@ -95,25 +76,24 @@ export default function RewardsPage() {
               <h2 className="text-xs sm:text-sm font-bold text-slate-800">Check-In Streak</h2>
               <p className="text-[10px] sm:text-xs text-slate-500 mt-1">Keep the momentum going!</p>
             </div>
-            <div className="bg-orange-50 p-2 rounded-xl">
-              <Flame size={28} className="text-orange-500 fill-orange-500" />
+            <div className={`p-2 rounded-xl ${data.currentStreak > 0 ? 'bg-orange-50' : 'bg-slate-50'}`}>
+              <Flame size={28} className={data.currentStreak > 0 ? 'text-orange-500 fill-orange-500' : 'text-slate-300'} />
             </div>
           </div>
           
           <div className="mb-6">
-            <span className="text-4xl sm:text-5xl font-black text-slate-800">{currentStreak}</span>
+            <span className="text-4xl sm:text-5xl font-black text-slate-800">{data.currentStreak}</span>
             <span className="text-sm sm:text-base font-bold text-slate-400 ml-2">Days</span>
           </div>
 
-          {/* 7-Day Visual Tracker */}
           <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-            {weekTracker.map((day, idx) => (
+            {data.weekTracker.map((day, idx) => (
               <div key={idx} className="flex flex-col items-center gap-1.5">
                 <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">{day.day}</span>
                 <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center border-2 ${
-                  day.completed 
-                    ? 'bg-orange-500 border-orange-500 text-white shadow-sm' 
-                    : 'bg-white border-slate-200 text-transparent'
+                  day.completed ? 'bg-orange-500 border-orange-500 text-white shadow-sm' 
+                  : day.isFuture ? 'bg-transparent border-transparent text-transparent' 
+                  : 'bg-white border-slate-200 text-transparent'
                 }`}>
                   {day.completed && <Check size={14} strokeWidth={4} />}
                 </div>
@@ -122,20 +102,20 @@ export default function RewardsPage() {
           </div>
         </div>
 
-        {/* Overall Wellness Score Card */}
+        {/* Wellness Score Card */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-start mb-6">
             <div>
               <h2 className="text-xs sm:text-sm font-bold text-slate-800">Wellness Score</h2>
-              <p className="text-[10px] sm:text-xs text-slate-500 mt-1">Earn points by following your plan</p>
+              <p className="text-[10px] sm:text-xs text-slate-500 mt-1">Earn points by checking in</p>
             </div>
-            <div className="bg-teal-50 p-2 rounded-xl text-teal-700 font-black text-sm">
-              Level 4
+            <div className="bg-teal-50 px-3 py-1.5 rounded-xl text-teal-700 font-black text-sm">
+              Level {data.level}
             </div>
           </div>
 
           <div className="text-center mb-6 mt-4">
-            <span className="text-5xl sm:text-6xl font-black text-teal-700">{wellnessScore}</span>
+            <span className="text-5xl sm:text-6xl font-black text-teal-700">{data.wellnessScore}</span>
             <span className="text-sm font-bold text-slate-400"> / 100</span>
           </div>
 
@@ -143,11 +123,11 @@ export default function RewardsPage() {
             <div className="w-full bg-slate-100 rounded-full h-3 mb-2 overflow-hidden shadow-inner">
               <div 
                 className="bg-teal-600 h-3 rounded-full transition-all duration-1000 ease-out" 
-                style={{ width: `${wellnessScore}%` }}
+                style={{ width: `${data.wellnessScore}%` }}
               ></div>
             </div>
             <p className="text-[10px] sm:text-xs text-slate-400 font-medium text-center">
-              28 points to reach Level 5
+              {data.pointsToNextLevel} points to reach Level {data.level + 1}
             </p>
           </div>
         </div>
@@ -158,52 +138,39 @@ export default function RewardsPage() {
       <div>
         <h2 className="text-xs sm:text-sm font-bold text-slate-800 mb-3 px-1">Badges & Milestones</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          
           {badges.map((badge) => {
             const Icon = badge.icon;
-            const isUnlocked = badge.unlocked;
             const progressPct = Math.round((badge.progress / badge.target) * 100);
 
             return (
-              <div 
-                key={badge.id} 
-                className={`flex gap-4 p-4 rounded-2xl border transition-all ${
-                  isUnlocked 
-                    ? 'bg-white border-slate-200 shadow-sm' 
-                    : 'bg-slate-50 border-slate-200 opacity-80 grayscale-[0.5]'
-                }`}
-              >
-                {/* Badge Icon */}
+              <div key={badge.id} className={`flex gap-4 p-4 rounded-2xl border transition-all ${
+                  badge.unlocked ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-50 border-slate-200 opacity-80 grayscale-[0.5]'
+              }`}>
                 <div className={`shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-inner ${
-                  isUnlocked ? badge.bgColor : 'bg-slate-200'
+                  badge.unlocked ? badge.bgColor : 'bg-slate-200'
                 }`}>
-                  <Icon size={28} className={isUnlocked ? badge.iconColor : 'text-slate-400'} />
+                  <Icon size={28} className={badge.unlocked ? badge.iconColor : 'text-slate-400'} />
                 </div>
 
-                {/* Badge Details */}
                 <div className="flex-1 flex flex-col justify-center">
                   <div className="flex justify-between items-start mb-1">
-                    <h3 className={`text-sm sm:text-base font-bold ${isUnlocked ? 'text-slate-800' : 'text-slate-500'}`}>
+                    <h3 className={`text-sm sm:text-base font-bold ${badge.unlocked ? 'text-slate-800' : 'text-slate-500'}`}>
                       {badge.title}
                     </h3>
-                    {!isUnlocked && <Lock size={14} className="text-slate-400" />}
+                    {!badge.unlocked && <Lock size={14} className="text-slate-400" />}
                   </div>
                   <p className="text-[10px] sm:text-xs text-slate-500 mb-3 leading-relaxed">
                     {badge.description}
                   </p>
 
-                  {/* Progress Bar for Locked Badges */}
-                  {!isUnlocked ? (
+                  {!badge.unlocked ? (
                     <div>
                       <div className="flex justify-between text-[9px] sm:text-[10px] font-bold text-slate-400 mb-1">
                         <span>Progress</span>
-                        <span>{badge.progress} / {badge.target} days</span>
+                        <span>{badge.progress} / {badge.target}</span>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-1.5">
-                        <div 
-                          className="bg-slate-400 h-1.5 rounded-full transition-all" 
-                          style={{ width: `${progressPct}%` }}
-                        ></div>
+                        <div className="bg-slate-400 h-1.5 rounded-full transition-all" style={{ width: `${progressPct}%` }}></div>
                       </div>
                     </div>
                   ) : (

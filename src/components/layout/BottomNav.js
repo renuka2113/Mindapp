@@ -8,8 +8,8 @@ export default function BottomNav() {
     { name: 'Check-In', path: '/check-in', icon: ClipboardList },
     { name: 'My Plan', path: '/my-plan', icon: ListChecks },
     { name: 'Progress', path: '/progress', icon: TrendingUp },
-    { name: 'Rewards', path: '/rewards', icon: Trophy },
-    { name: 'Alerts', path: '/alerts', icon: Bell },
+    { name: 'Achievements', path: '/rewards', icon: Trophy },
+    // { name: 'Alerts', path: '/alerts', icon: Bell },
   ];
 
   return (

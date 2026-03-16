@@ -1,42 +1,47 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-
-import { Info, Activity, CheckCircle2, LayoutDashboard } from 'lucide-react';
-
+import { Activity, CheckCircle2, LayoutDashboard } from 'lucide-react';
 import {
-
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
 export default function DashboardPage() {
   const [aiOutput, setAiOutput] = useState(null);
-
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedData = localStorage.getItem('latest_analysis');
-      if (savedData) {
-        setAiOutput(JSON.parse(savedData));
+    const fetchDashboardData = async () => {
+      const userId = localStorage.getItem('userId') || 1;
+      try {
+        const res = await fetch(`/api/dashboard?userId=${userId}`);
+        const data = await res.json();
+        
+        if (data.hasData) {
+          setAiOutput(data.aiOutput);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+
+    fetchDashboardData();
   }, []);
+
+  if (isLoading) {
+    return <div className="p-20 text-center font-bold text-slate-500">Loading your personalized insights...</div>;
+  }
 
   if (!aiOutput) {
     return (
       <div className='flex flex-col items-center justify-center p-20 text-slate-400'>
         <LayoutDashboard size={48} className='mb-4 opacity-20' />
-        <p className='font-bold'>No analysis found. Please complete a Check-In.</p>
+        <p className='font-bold'>No analysis found. Please complete your Daily Check-In.</p>
       </div>
     );
   }
-
 
   // 1. DYNAMIC COLOR CONFIG
   const statusConfig = {
@@ -47,17 +52,14 @@ export default function DashboardPage() {
   };
   const theme = statusConfig[aiOutput.status] || statusConfig['Normal'];
 
-
   // 2. MAP SHAP DATA FOR CHARTS
   const behavioralData = Object.entries(aiOutput.shap_scores)
-    
-  .filter(([key]) => !key.includes('_diff'))
+    .filter(([key]) => !key.includes('_diff'))
     .map(([key, value]) => ({
       name: key.replace('_score', '').toUpperCase(),
       value: Math.abs(Math.round(value * 100)),
     }))
     .slice(0, 5);
-
 
   return (
     <div className='max-w-4xl mx-auto space-y-6 pb-10'>
@@ -87,10 +89,11 @@ export default function DashboardPage() {
               Priority Action Items
             </h4>
             <div className='space-y-3'>
-              {aiOutput.plan.map((item, idx) => (
-                <div key={idx} className='flex items-start gap-3 text-xs'>
-                  <CheckCircle2 size={16} className='text-teal-700 shrink-0 mt-0.5' />
-                  <p className='text-slate-700'>
+              {/* NOW RENDERING FROM THE DATABASE TABLE */}
+              {aiOutput.plan.map((item) => (
+                <div key={item.id} className='flex items-start gap-3 text-xs'>
+                  <CheckCircle2 size={16} className={`shrink-0 mt-0.5 ${item.is_completed ? 'text-green-500' : 'text-slate-300'}`} />
+                  <p className={`text-slate-700 ${item.is_completed ? 'line-through opacity-50' : ''}`}>
                     <span className='font-bold text-slate-900'>{item.task}:</span> {item.detail}
                   </p>
                 </div>
@@ -163,8 +166,6 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
       </div>
-
-
     </div>
   );
 }
