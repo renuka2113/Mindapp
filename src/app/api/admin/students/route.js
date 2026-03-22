@@ -10,20 +10,23 @@ export async function GET(request) {
   }
 
   try {
-    // 1. Find the admin's college name
+    
     const admin = db.prepare("SELECT college_name FROM users WHERE id = ? AND role = 'admin'").get(adminId);
 
     if (!admin) {
       return NextResponse.json({ error: 'Unauthorized: Admin record not found' }, { status: 403 });
     }
 
-    // 2. Fetch all students from the same college
-    // We join with the latest check-in to see their current risk status
+    
+    
     const students = db.prepare(`
       SELECT 
         u.id, 
         u.full_name, 
         u.email,
+        u.college_name, 
+        u.branch,        
+        u.year,
         u.current_streak, 
         u.wellness_score,
         (SELECT risk_score FROM checkins WHERE user_id = u.id ORDER BY date DESC LIMIT 1) as latest_risk,

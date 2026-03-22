@@ -20,20 +20,20 @@ export default function RootLayout({ children }) {
       return;
     }
 
-    // 2. If logged in but trying to access Login page
+    
     if (isLoggedIn && isPublicPath) {
       if (userRole === 'admin') router.push('/admin/dashboard');
       else router.push('/dashboard');
       return;
     }
 
-    // 3. ROLE PROTECTION: Prevent Students from entering Admin area
+    
     if (isLoggedIn && isAdminPath && userRole !== 'admin') {
-      router.push('/dashboard'); // Kick student back to their dashboard
+      router.push('/dashboard'); 
     }
 
-    // 4. ROLE PROTECTION: Prevent Admins from entering Student area
-    // (Optional, if you want admins to have a completely separate experience)
+    
+    
     if (isLoggedIn && !isAdminPath && !isPublicPath && userRole === 'admin') {
       router.push('/admin/dashboard');
     }

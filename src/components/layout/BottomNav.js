@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LayoutGrid, ClipboardList, ListChecks, TrendingUp, Trophy, Bell } from 'lucide-react';
+import { LayoutGrid, ClipboardList, ListChecks, TrendingUp, Trophy, User } from 'lucide-react';
 
 export default function BottomNav() {
   const navItems = [
@@ -9,7 +9,8 @@ export default function BottomNav() {
     { name: 'My Plan', path: '/my-plan', icon: ListChecks },
     { name: 'Progress', path: '/progress', icon: TrendingUp },
     { name: 'Achievements', path: '/rewards', icon: Trophy },
-    // { name: 'Alerts', path: '/alerts', icon: Bell },
+    { name: 'Profile', path: '/profile', icon: User },
+    
   ];
 
   return (

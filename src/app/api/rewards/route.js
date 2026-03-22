@@ -10,7 +10,7 @@ export async function GET(request) {
   }
 
   try {
-    // 1. Fetch recent check-ins (last 30 days is enough for badges/streaks)
+    
     const checkins = db.prepare(`
       SELECT date(date) as checkin_date, sleep_duration, physical_activity, stress_level 
       FROM checkins 
@@ -19,10 +19,10 @@ export async function GET(request) {
       LIMIT 30
     `).all(userId);
 
-    // 2. Calculate Streak
+    
     let currentStreak = 0;
     const today = new Date();
-    // Normalize dates to check for consecutive days
+    
     const checkinDates = checkins.map(c => c.checkin_date);
     
     for (let i = 0; i < 30; i++) {
@@ -33,27 +33,27 @@ export async function GET(request) {
       if (checkinDates.includes(dateString)) {
         currentStreak++;
       } else if (i === 0) {
-        // If they missed today, streak isn't broken yet (they have until midnight)
+        
         continue;
       } else {
-        // Broken streak
+        
         break;
       }
     }
 
-    // 3. Calculate Wellness Score & Level
-    // Simple formula: 15 points per check-in + bonus for current streak
+    
+    
     const totalCheckins = db.prepare('SELECT COUNT(*) as count FROM checkins WHERE user_id = ?').get(userId).count;
     const rawScore = (totalCheckins * 15) + (currentStreak * 10);
     
-    // Level up every 100 points
+    
     const level = Math.floor(rawScore / 100) + 1;
-    const wellnessScore = rawScore % 100; // Progress towards next level (0-99)
+    const wellnessScore = rawScore % 100; 
     const pointsToNextLevel = 100 - wellnessScore;
 
-    // 4. Weekly Tracker (Mon-Sun)
+    
     const weekTracker = [];
-    const currentDay = today.getDay() || 7; // Make Sunday 7 instead of 0
+    const currentDay = today.getDay() || 7; 
     const monday = new Date(today);
     monday.setDate(monday.getDate() - currentDay + 1);
 
@@ -70,22 +70,22 @@ export async function GET(request) {
       });
     }
 
-    // 5. Badge Progress Logic
-    // Badge 1: Consistency Star (10 days streak)
+    
+    
     const consistencyProgress = Math.min(currentStreak, 10);
     
-    // Badge 2: Sleep Champion (7+ hours for 5 consecutive days)
+    
     let sleepProgress = 0;
     for (let i = 0; i < Math.min(5, checkins.length); i++) {
       if (checkins[i].sleep_duration >= 7) sleepProgress++;
       else break; 
     }
 
-    // Badge 3: Fitness Starter (30+ mins / 0.5h activity 3 times in last 7 days)
+    
     const last7Days = checkins.slice(0, 7);
     const fitnessProgress = Math.min(last7Days.filter(c => c.physical_activity >= 0.5).length, 3);
 
-    // Badge 4: Zen Master (Low stress <= 5 for 7 days)
+    
     const zenProgress = Math.min(last7Days.filter(c => c.stress_level <= 5).length, 7);
 
     const badgesData = [

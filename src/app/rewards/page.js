@@ -26,7 +26,7 @@ export default function RewardsPage() {
   if (loading) return <div className="p-10 text-center text-slate-500 font-bold">Loading rewards...</div>;
   if (!data) return <div className="p-10 text-center text-slate-500">No data available.</div>;
 
-  // Base Badge Definitions merged with dynamic progress
+  
   const badges = [
     {
       id: 1, title: 'Consistency Star', description: 'Completed 10 daily check-ins in a row.',

@@ -102,7 +102,7 @@ export default function CheckInPage() {
 
         if (result.hasSubmitted && result.data) {
           setHasSubmittedToday(true);
-          // Pre-fill sliders with what they submitted earlier today
+          
           setSleepDuration(result.data.sleep_duration);
           setSleepQuality(result.data.sleep_quality);
           setStudyHours(result.data.study_hours);
@@ -150,7 +150,7 @@ export default function CheckInPage() {
       const result = await res.json();
       localStorage.setItem('latest_analysis', JSON.stringify(result.ml));
       if (result.success) {
-        // alert("Check-in complete! View your updated plan.");
+        
         router.push('/dashboard');
       }
     } catch (err) {

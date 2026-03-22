@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 
 export async function GET(request) {
-  // Extract the userId from the URL query parameters
+  
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
 
@@ -11,8 +11,8 @@ export async function GET(request) {
   }
 
   try {
-    // Query SQLite to see if a check-in exists for this user TODAY
-    // date('now', 'localtime') ensures it matches the user's current local day
+    
+    
     const todayCheckin = db
       .prepare(
         `
@@ -23,11 +23,11 @@ export async function GET(request) {
       .get(userId);
 
     if (todayCheckin) {
-      // If found, return true and send back the existing data to pre-fill the UI sliders
+      
       return NextResponse.json({ hasSubmitted: true, data: todayCheckin });
     }
 
-    // If no row is found for today, return false
+    
     return NextResponse.json({ hasSubmitted: false });
   } catch (error) {
     console.error('GET Check-in Error:', error);
@@ -96,7 +96,7 @@ export async function POST(request) {
       history_avg,
     };
 
-    // 1. Call Flask Backend First
+    
     const flaskResponse = await fetch('http://localhost:5000/api/recommend', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -105,7 +105,7 @@ export async function POST(request) {
 
     const mlResult = await flaskResponse.json();
 
-    // Calculate the final risk score using the logic from your MyPlanPage
+    
     const baseValues = { 0: 15, 1: 42, 2: 68, 3: 92 };
     const base = baseValues[mlResult.code] || 0;
     const intensity = mlResult.shap_scores
@@ -114,7 +114,7 @@ export async function POST(request) {
     const finalRiskScore = Math.min(Math.round(base + intensity * 5), 100);
 
     const shapJson = JSON.stringify(mlResult.shap_scores || {});
-    // 2. Check if an entry already exists for today
+    
     const existing = db
       .prepare(
         `
@@ -191,8 +191,8 @@ export async function POST(request) {
       );
     }
 
-    // 2. UPSERT DAILY TASKS
-    // First, delete any existing tasks for today (so if they re-submit, we generate a fresh plan)
+    
+    
     db.prepare(
       `DELETE FROM daily_tasks WHERE user_id = ? AND date = date('now', 'localtime')`,
     ).run(userId);
@@ -203,7 +203,7 @@ export async function POST(request) {
         VALUES (?, ?, ?, ?, ?, 0)
       `);
       mlResult.plan.forEach((task) => {
-        // Now saving category and priority!
+        
         insertTask.run(
           userId,
           task.task,
@@ -214,7 +214,7 @@ export async function POST(request) {
       });
     }
     try {
-      // Get all check-in dates for this user to calculate the streak
+      
       const checkins = db
         .prepare(
           `
@@ -230,7 +230,7 @@ export async function POST(request) {
       const today = new Date().toISOString().split('T')[0];
       const checkinDates = checkins.map((c) => c.checkin_date);
 
-      // Simple Streak Calculation
+      
       for (let i = 0; i < checkinDates.length; i++) {
         const d = new Date();
         d.setDate(d.getDate() - i);
@@ -243,8 +243,8 @@ export async function POST(request) {
         }
       }
 
-      // Update the users table
-      // We'll increment the wellness_score by 10 for every check-in
+      
+      
       db.prepare(
         `
     UPDATE users 
@@ -255,7 +255,7 @@ export async function POST(request) {
       ).run(streak, userId);
     } catch (streakError) {
       console.error('Failed to update user streak stats:', streakError);
-      // We don't want to fail the whole check-in if just the streak update fails
+      
     }
     return NextResponse.json({ success: true, ml: mlResult });
   } catch (error) {

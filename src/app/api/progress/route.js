@@ -10,7 +10,7 @@ export async function GET(request) {
   }
 
   try {
-    // 1. Get history for the chart (Formatting the date as 'Mar 14')
+    
     const rawHistory = db.prepare(`
       SELECT 
         strftime('%b %d', date) as date_str, 
@@ -21,19 +21,19 @@ export async function GET(request) {
       LIMIT 15
     `).all(userId);
 
-    // Filter out any check-ins where risk_score might be null
+    
     const history = rawHistory.filter(h => h.score !== null).map(h => ({
       date: h.date_str,
       score: h.score
     }));
 
-    // 2. Get Baseline (The very first check-in)
+    
     const baseline = db.prepare(`
       SELECT sleep_duration, mood_level, stress_level, anxiety_level, physical_activity, social_media
       FROM checkins WHERE user_id = ? ORDER BY date ASC LIMIT 1
     `).get(userId);
 
-    // 3. Get Current (Average of the last 3 check-ins)
+    
     const currentAvg = db.prepare(`
       SELECT 
         AVG(sleep_duration) as sleep, 
@@ -45,26 +45,26 @@ export async function GET(request) {
       FROM (SELECT * FROM checkins WHERE user_id = ? ORDER BY date DESC LIMIT 3)
     `).get(userId);
 
-    // If no data exists yet
+    
     if (!baseline || history.length === 0) {
       return NextResponse.json({ history: [] });
     }
 
-    // 4. Calculate Stats
+    
     const initialScore = history[0]?.score || 0;
     const currentScore = history[history.length - 1]?.score || 0;
     
-    // Improvement percentage
+    
     let improvement = 0;
     if (initialScore > 0) {
       improvement = Math.round(((initialScore - currentScore) / initialScore) * 100);
     }
 
-    // 7-day average (or less if they haven't done 7 days)
+    
     const recentScores = history.slice(-7);
     const avg7Day = Math.round(recentScores.reduce((sum, curr) => sum + curr.score, 0) / recentScores.length);
 
-    // 5. Structure Behavioral Comparison Data
+    
     const behavioral = [
       { 
         label: 'Sleep Duration', 

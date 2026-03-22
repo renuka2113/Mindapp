@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 
-// 1. GET: Fetch today's tasks and the latest risk score
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
@@ -11,7 +11,7 @@ export async function GET(request) {
   }
 
   try {
-    // A. Get the latest risk score and AI code for the UI
+    
     const latestCheckin = db
       .prepare(
         `
@@ -24,7 +24,7 @@ export async function GET(request) {
       )
       .get(userId);
 
-    // B. Get today's tasks
+    
     const tasks = db
       .prepare(
         `
@@ -54,7 +54,7 @@ export async function GET(request) {
   }
 }
 
-// 2. PATCH: Toggle the completed status of a single task
+
 export async function PATCH(request) {
   try {
     const { taskId, completed } = await request.json();
@@ -69,7 +69,7 @@ export async function PATCH(request) {
       WHERE id = ?
     `);
 
-    // SQLite uses 1 for true and 0 for false
+    
     stmt.run(completed ? 1 : 0, taskId);
 
     return NextResponse.json({ success: true });

@@ -10,7 +10,7 @@ export async function GET(request) {
   }
 
   try {
-    // 1. Get the most recent check-in that has AI data
+    
     const latestCheckin = db.prepare(`
       SELECT 
         ai_status as status, 
@@ -28,23 +28,23 @@ export async function GET(request) {
       return NextResponse.json({ hasData: false });
     }
 
-    // Convert the stringified JSON back into a Javascript object
+    
     const shap_scores = JSON.parse(latestCheckin.ai_shap_json || '{}');
 
-    // 2. Get the daily tasks associated with this specific check-in date
+    
     const tasks = db.prepare(`
       SELECT id, task_title as task, task_detail as detail, is_completed 
       FROM daily_tasks 
       WHERE user_id = ? AND date = ?
     `).all(userId, latestCheckin.checkin_date);
 
-    // 3. Package it up to match exactly what your frontend expects
+    
     const aiOutput = {
       status: latestCheckin.status,
       code: latestCheckin.code,
       trigger: latestCheckin.trigger,
       shap_scores: shap_scores,
-      plan: tasks // We send the DB tasks array instead of the raw Flask output
+      plan: tasks 
     };
 
     return NextResponse.json({ hasData: true, aiOutput });

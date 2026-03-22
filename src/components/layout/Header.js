@@ -6,10 +6,10 @@ import { useRouter, usePathname } from 'next/navigation';
 
 export default function Header() {
   const router = useRouter();
-  const pathname = usePathname(); // We use this to refresh the streak when navigating
+  const pathname = usePathname(); 
   const [streak, setStreak] = useState(0);
 
-  // Fetch the dynamic streak from the DB
+  
   useEffect(() => {
     const fetchStreak = async () => {
       const userId = localStorage.getItem('userId') || 1;
@@ -25,20 +25,20 @@ export default function Header() {
     };
 
     fetchStreak();
-  }, [pathname]); // Re-run this check whenever the user changes pages (like after a check-in)
+  }, [pathname]); 
 
   const handleLogout = () => {
-    // 1. Clear the local storage keys
+    
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userId');
     localStorage.removeItem('userName');
     localStorage.removeItem('userRole');
     localStorage.removeItem('latest_analysis');
 
-    // 2. Redirect to the login page
+    
     router.push('/login');
 
-    // 3. Refresh the page to reset the layout state
+    
     router.refresh();
   };
   const isAdminArea = pathname.startsWith('/admin');

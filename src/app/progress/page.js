@@ -11,8 +11,8 @@ export default function ProgressPage() {
 
   useEffect(() => {
     const fetchProgress = async () => {
-      // In a real app, you would get this from Context or a secure session
-      // Defaulting to 1 just for testing if localStorage is empty
+      
+      
       const userId = localStorage.getItem('userId') || 1; 
       try {
         const res = await fetch(`/api/progress?userId=${userId}`);

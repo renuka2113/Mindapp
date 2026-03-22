@@ -16,7 +16,7 @@ export async function POST(request) {
       return NextResponse.json({ 
         message: 'Login successful', 
         user: result.user,
-        role: result.user.role // Critical for frontend redirection logic
+        role: result.user.role 
       }, { status: 200 });
     } else {
       return NextResponse.json({ error: result.error }, { status: 401 });

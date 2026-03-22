@@ -20,13 +20,6 @@ def recommend():
     features = ["leisure_score", "me_score", "phone_score", "sleep_score", "social_score"]
     diff_vals = [current[f] - avg[f] for f in features]
     
-    # if np.abs(diff_vals).mean() < 0.5:
-    #     return jsonify({
-    #         "status": "Normal",
-    #         "plan": "You are consistent! No changes needed.",
-    #         "trigger": "None",
-    #         "code": 0
-    #     })
 
     result = get_mental_health_recommendation(current, avg)
     

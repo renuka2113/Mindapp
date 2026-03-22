@@ -9,16 +9,16 @@ shap_explainer = joblib.load("../models/shap_explainer.pkl")
 def get_curated_tasks(current, avg, shap_scores, trigger):
     tasks = []
     
-    # 1. DYNAMIC PRIORITY LOGIC
-    # We use the raw SHAP values to determine 'Urgency'
-    # 0.0 - 0.3: Low | 0.3 - 0.7: Medium | > 0.7: Critical
+    
+    
+    
     def get_priority(feature_name):
         val = abs(shap_scores.get(feature_name, 0))
         if val > 0.7: return "CRITICAL"
         if val > 0.3: return "HIGH"
         return "MEDIUM"
 
-    # 2. TRIGGER TASK (The Primary Intervention)
+    
     trigger_map = {
         'sleep_score': {
             "task": "Sleep Calibration",
@@ -43,9 +43,9 @@ def get_curated_tasks(current, avg, shap_scores, trigger):
     if trigger in trigger_map:
         tasks.append(trigger_map[trigger])
 
-    # 3. THE "DISTRIBUTION" LOGIC (Using SHAP to find 'Neglected' areas)
-    # We find the feature with the LOWEST SHAP score—this is the area 
-    # the user is ignoring or "borrowing" time from.
+    
+    
+    
     base_shaps = {k: v for k, v in shap_scores.items() if '_diff' not in k}
     neglected_feature = min(base_shaps, key=base_shaps.get)
 
@@ -67,8 +67,8 @@ def get_curated_tasks(current, avg, shap_scores, trigger):
     if neglected_feature in distribution_map:
         tasks.append(distribution_map[neglected_feature])
 
-    # 4. CONDITIONAL SCENARIOS (High/Low/Mild)
-    # Sleep Over-performance (Your 105% case)
+    
+    
     if current['sleep_score'] > 8.5:
         tasks.append({
             "task": "Sleep Inertia Prevention",
@@ -77,7 +77,7 @@ def get_curated_tasks(current, avg, shap_scores, trigger):
             "category": "Sleep"
         })
 
-    # High Screen Time + Low Productivity
+    
     if current['phone_score'] > avg['phone_score'] + 2 and current['me_score'] < avg['me_score']:
         tasks.append({
             "task": "Deep Work Swap",

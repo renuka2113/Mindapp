@@ -8,7 +8,7 @@ export default function MyPlanPage() {
   const [riskScore, setRiskScore] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Fetch persistent data from the Database on mount
+  
   useEffect(() => {
     const fetchPlan = async () => {
       const userId = localStorage.getItem('userId');
@@ -19,12 +19,12 @@ export default function MyPlanPage() {
         if (data.hasData) {
           setRiskScore(data.riskScore);
 
-          // 2. Apply your custom UI mapping (Icons and Time of Day)
+          
           const mappedTasks = data.tasks.map((item) => {
             const taskName = item.title.toLowerCase();
             const category = item.category?.toLowerCase() || '';
 
-            // Logic to assign Time of Day based on keywords/category
+            
             let assignedTime = 'Afternoon';
             if (
               taskName.includes('inertia') ||
@@ -47,7 +47,7 @@ export default function MyPlanPage() {
               assignedTime = 'Afternoon';
             }
 
-            // Map category to Emoji Icons
+            
             const icons = {
               sleep: '🌙',
               phone: '📱',
@@ -58,7 +58,7 @@ export default function MyPlanPage() {
             };
 
             return {
-              id: item.id, // Using the SQLite Row ID
+              id: item.id, 
               time: assignedTime,
               title: item.title,
               desc: item.desc,
@@ -69,7 +69,7 @@ export default function MyPlanPage() {
             };
           });
 
-          // 3. Sort tasks: Morning -> Afternoon -> Night
+          
           const sortedTasks = mappedTasks.sort((a, b) => {
             const order = { Morning: 1, Afternoon: 2, Night: 3 };
             return order[a.time] - order[b.time];
@@ -87,18 +87,18 @@ export default function MyPlanPage() {
     fetchPlan();
   }, []);
 
-  // 4. Toggle function to update Database and local state
+  
   const toggleTask = async (taskId, currentStatus) => {
     const newStatus = !currentStatus;
     
-    // Update UI immediately (Optimistic Update)
+    
     setTasks((prev) =>
       prev.map((task) =>
         task.id === taskId ? { ...task, completed: newStatus } : task
       )
     );
 
-    // Send the PATCH request to SQLite
+    
     try {
       const res = await fetch('/api/plan', {
         method: 'PATCH',
@@ -109,7 +109,7 @@ export default function MyPlanPage() {
       if (!res.ok) throw new Error("Database update failed");
     } catch (error) {
       console.error(error);
-      // Revert UI if DB call fails
+      
       setTasks((prev) =>
         prev.map((task) =>
           task.id === taskId ? { ...task, completed: currentStatus } : task

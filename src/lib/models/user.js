@@ -1,17 +1,15 @@
 import db from '../db';
 import bcrypt from 'bcryptjs';
 
-// SIGNUP MODEL
-export const createUser = (fullName, email, plainPassword, role, collegeName) => {
+
+export const createUser = (fullName, email, plainPassword, role, collegeName, branch, year) => {
   try {
     const hash = bcrypt.hashSync(plainPassword, 10);
-    
     const stmt = db.prepare(`
-      INSERT INTO users (full_name, email, password_hash, role, college_name) 
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO users (full_name, email, password_hash, role, college_name, branch, year) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
-    
-    const info = stmt.run(fullName, email, hash, role, collegeName);
+    const info = stmt.run(fullName, email, hash, role, collegeName, branch, year);
     
     return { success: true, userId: info.lastInsertRowid };
   } catch (error) {
@@ -22,7 +20,7 @@ export const createUser = (fullName, email, plainPassword, role, collegeName) =>
   }
 };
 
-// LOGIN MODEL
+
 export const verifyUser = (email, plainPassword) => {
   try {
     const stmt = db.prepare('SELECT * FROM users WHERE email = ?');
@@ -33,7 +31,7 @@ export const verifyUser = (email, plainPassword) => {
     const isValid = bcrypt.compareSync(plainPassword, user.password_hash);
     if (!isValid) return { success: false, error: 'Invalid email or password.' };
 
-    // Return the role and college_name so the API can use it
+    
     const { password_hash, ...safeUser } = user;
     return { success: true, user: safeUser };
   } catch (error) {

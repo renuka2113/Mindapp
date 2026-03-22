@@ -43,7 +43,7 @@ export default function DashboardPage() {
     );
   }
 
-  // 1. DYNAMIC COLOR CONFIG
+  
   const statusConfig = {
     Normal: { text: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', stroke: '#16a34a' },
     Mild: { text: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', stroke: '#ea580c' },
@@ -52,7 +52,7 @@ export default function DashboardPage() {
   };
   const theme = statusConfig[aiOutput.status] || statusConfig['Normal'];
 
-  // 2. MAP SHAP DATA FOR CHARTS
+  
   const behavioralData = Object.entries(aiOutput.shap_scores)
     .filter(([key]) => !key.includes('_diff'))
     .map(([key, value]) => ({

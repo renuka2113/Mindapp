@@ -13,6 +13,8 @@ db.exec(`
     password_hash TEXT NOT NULL,
     role TEXT DEFAULT 'student',
     college_name TEXT,
+    branch TEXT,
+    year INTEGER,
     current_streak INTEGER DEFAULT 0,
     wellness_score INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
